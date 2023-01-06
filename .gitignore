@@ -1,3 +1,6 @@
+# App
+/src/*/resources/telegram_bot_conf.properties
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -45,3 +48,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
