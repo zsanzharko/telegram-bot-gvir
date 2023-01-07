@@ -1,4 +1,4 @@
-package kz.service.gamecard;
+package kz.service.game.gamecard;
 
 import kz.utils.DataSourceConfiguration;
 import kz.utils.DatabaseConnector;

@@ -1,4 +1,4 @@
-package kz.service.gamecard;
+package kz.service.game.gamecard;
 
 import kz.pojo.GameCard;
 import kz.utils.DataSourceConfiguration;
