@@ -1,6 +1,6 @@
 package kz.exception.game;
 
-public class GameStartException extends GameException {
+public final class GameStartException extends GameException {
   public GameStartException(String message, Throwable throwable) {
     super(message, throwable);
   }

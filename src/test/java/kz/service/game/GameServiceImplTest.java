@@ -14,53 +14,47 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GameServiceImplTest {
+  private static GameServiceImpl gameService;
 
   @BeforeAll
   public static void initDatasource() throws IOException, SQLException, ClassNotFoundException {
     DatabaseConnector.getInstance(new DataSourceConfiguration().getDatasourceConfig());
+    Properties properties = new Properties();
+    properties.put("game.players.size", 2);
+    gameService = GameServiceImpl.getInstance(properties);
   }
 
   @Test
-  void start() throws SQLException {
+  void start() {
+    List<Player> players = new ArrayList<>();
     List<GameCard> cards = new ArrayList<>();
     cards.add(new GameCard("Card", "Desc", 10));
-
-    Player player1 = new Player("Player1", cards);
-    Player player2 = new Player("Player2", cards);
-    GameServiceImpl gameService = GameServiceImpl.getInstance();
-
-    UUID session = gameService.startSession(player1, player2);
-
+    players.add(new Player("Player1", cards));
+    players.add(new Player("Player2", cards));
+    UUID session = gameService.startSession(players);
     assertNotNull(session);
     GameSession gameSession = gameService.getGameBySession(session);
-
-    assertEquals(player1, gameSession.getPlayer1());
-    assertEquals(player2, gameSession.getPlayer2());
+    assertEquals(2, gameSession.getPlayers().size());
     assertEquals(GameRoundState.NONE, gameSession.getRoundState());
   }
 
   @Test
-  void stop() throws SQLException {
+  void stop() {
+    List<Player> players = new ArrayList<>();
     List<GameCard> cards = new ArrayList<>();
     cards.add(new GameCard("Card", "Desc", 10));
-    Player player1 = new Player("Player1", cards);
-    Player player2 = new Player("Player2", cards);
-
-    GameServiceImpl gameService = GameServiceImpl.getInstance();
-
-    UUID session = gameService.startSession(player1, player2);
-
+    players.add(new Player("Player1", cards));
+    players.add(new Player("Player2", cards));
+    UUID session = gameService.startSession(players);
     assertNotNull(session);
-
     gameService.stopSession(session);
-
     assertNull(gameService.getGameBySession(session));
-    assertEquals(PlayerState.NONE, player1.getState());
-    assertEquals(PlayerState.NONE, player2.getState());
+    players.forEach(player -> assertEquals(PlayerState.NONE, player.getState()));
   }
 }

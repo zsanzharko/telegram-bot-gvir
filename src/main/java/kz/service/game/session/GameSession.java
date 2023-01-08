@@ -1,21 +1,62 @@
 package kz.service.game.session;
 
+import kz.pojo.GameCard;
 import kz.pojo.Player;
-import lombok.AllArgsConstructor;
+import kz.pojo.PlayerState;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.*;
+
+/**
+ * Information about game session with two players.
+ *
+ * @author Sanzhar
+ * @see kz.service.game.GameServiceImpl
+ */
+@Slf4j
 @Getter
-@AllArgsConstructor
-public class GameSession {
-  private final Player player1;
-  private final Player player2;
+public class GameSession implements GameSessionService {
+  @Setter
   private GameRoundState roundState;
+  private Map<Player, List<GameCard>> playersWithCard;
+  private GameArena gameArena;
 
-  public GameSession(Player player1, Player player2) {
-    this.player1 = player1;
-    this.player2 = player2;
+  public GameSession(List<Player> players) {
+    this.playersWithCard = setCardFromCardDeckPlayers(players);
+    this.gameArena = new GameArena(players);
     this.roundState = GameRoundState.NONE;
   }
 
+  /**
+   * Put cards from players card deck. Have limit size to put on card play.
+   * This method will be balance cards on players, that a game need to be normal.
+   *
+   * @param players for get cards from card deck
+   * @return playable cards on current session game
+   */
+  private Map<Player, List<GameCard>> setCardFromCardDeckPlayers(List<Player> players) {
+    // FIXME: 1/8/2023 Add rule to get cards from card deck.
+    Map<Player, List<GameCard>> playerListMap = new HashMap<>(players.size());
+    players.forEach(player -> playerListMap.put(player, player.getCardDeck()));
+    return playerListMap;
+  }
 
+
+  public Set<Player> getPlayers() {
+    return new HashSet<>(playersWithCard.keySet());
+  }
+
+  @Override
+  public void stopSession() {
+    roundState = GameRoundState.NONE;
+    Map<Player, Map<String, String>> statistics = gameArena.getStatistics();
+    playersWithCard.keySet().forEach(p -> p.setState(PlayerState.NONE));
+    playersWithCard = null;
+    gameArena = null;
+    log.info(statistics.toString());
+    // TODO: 1/8/2023 Finish game for to players and notify
+    //  with him from take instance object
+  }
 }
