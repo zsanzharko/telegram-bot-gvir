@@ -28,29 +28,36 @@ public class GameServiceImpl implements GameService {
 
   @Override
   public UUID startSession(List<Player> players) {
-      if (!gameProperties.get("game.players.size").equals(players.size())) {
-        throw new GameStartException("Players is not be compatibility size player on game",
-                new GameException("Have problem with connect service... Check rule connect player." +
-                        " Also check waiting room"));
-      }
+    if (players == null) {
+      throw new GameStartException("Players can not be null");
+    } else if (!Objects.equals(gameProperties.get("session.players"), String.valueOf(players.size()))) {
+      throw new GameStartException("Players is not be compatibility size player on game",
+              new GameException("Have problem with connect service... Check rule connect player." +
+                      " Also check waiting room"));
+    }
     log.debug("Players size: " + players.size());
     final UUID session = UUID.randomUUID();
     // check preparation for start playing game
+    log.debug("Game properties");
+    log.debug(gameProperties.toString());
     for (Player player : players) {
       if (!(prepareToGameSession(player))) {
+        log.debug(String.format("Can't prepared player %s to this game", player));
+        // FIXME: 1/9/2023 Take interface and send information about can't start game
+        //  cause player is not prepared. and remove exception if problem on player side.
         throw new GameStartException("Can't start cause preparation is been successfully.");
       }
     }
     // set players on state in game
     players.forEach(player -> player.setState(PlayerState.IN_GAME));
-    gameSessions.put(session, new GameSession(players));
+    log.debug("Adding players to game session");
+    gameSessions.put(session, new GameSession(players, gameProperties));
     return session;
   }
 
   @Override
   public void stopSession(UUID session) {
-    gameSessions.get(session)
-            .stopSession();
+    gameSessions.get(session).stopSession();
     gameSessions.remove(session);
   }
 

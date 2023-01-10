@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 
 /**
- * Information about game session with two players.
+ * Provide full game control on session with players.
  *
  * @author Sanzhar
  * @see kz.service.game.GameServiceImpl
@@ -23,9 +23,9 @@ public class GameSession implements GameSessionService {
   private Map<Player, List<GameCard>> playersWithCard;
   private GameArena gameArena;
 
-  public GameSession(List<Player> players) {
+  public GameSession(List<Player> players, Properties gameRuleProperties) {
     this.playersWithCard = setCardFromCardDeckPlayers(players);
-    this.gameArena = new GameArena(players);
+    this.gameArena = new GameArena(players, gameRuleProperties);
     this.roundState = GameRoundState.NONE;
   }
 
@@ -48,6 +48,10 @@ public class GameSession implements GameSessionService {
     return new HashSet<>(playersWithCard.keySet());
   }
 
+  /**
+   * Session will stop on session side. Players will get set None.
+   * And show full information about game sessions.
+   */
   @Override
   public void stopSession() {
     roundState = GameRoundState.NONE;
