@@ -17,7 +17,7 @@ import java.util.*;
  */
 @Slf4j
 @Getter
-public class GameSession implements GameSessionService {
+public class GameSession implements GameSessionService, ArenaService {
   @Setter
   private GameRoundState roundState;
   private Map<Player, List<GameCard>> playersWithCard;
@@ -62,5 +62,53 @@ public class GameSession implements GameSessionService {
     log.info(statistics.toString());
     // TODO: 1/8/2023 Finish game for to players and notify
     //  with him from take instance object
+  }
+
+  @Override
+  public GameCard addCard(Player player, Integer row, GameCard card) {
+    if (notExist(player) || invalidCard(player, card)) {
+      return null;
+    }
+    return gameArena.addCard(player, row, card);
+  }
+
+  @Override
+  public boolean removeCard(Player player, Integer row, GameCard card) {
+    if (notExist(player) || invalidCard(player, card)) {
+      return false;
+    }
+    return gameArena.removeCard(player, row, card);
+  }
+
+  @Override
+  public Map<Player, Map<String, String>> getStatistics() {
+    return gameArena.getStatistics();
+  }
+
+  @Override
+  public Map<Integer, List<GameCard>> getArena(Player player) {
+    if (notExist(player)) {
+      return null;
+    }
+    return gameArena.getArena(player);
+  }
+
+  @Override
+  public List<GameCard> getArena(Player player, int row) {
+    if (notExist(player)) {
+      return null;
+    }
+    return gameArena.getArena(player, row);
+  }
+
+  private boolean notExist(Player player) {
+    return !gameArena.getPlayers().contains(player)
+            || !gameArena.getArena().containsKey(player)
+            || player.getState() != PlayerState.IN_GAME;
+  }
+
+  private boolean invalidCard(Player player, GameCard card) {
+    return !playersWithCard.containsKey(player)
+            || !playersWithCard.get(player).contains(card);
   }
 }

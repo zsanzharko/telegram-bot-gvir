@@ -2,7 +2,6 @@ package kz.service.game.session;
 
 import kz.pojo.GameCard;
 import kz.pojo.Player;
-import kz.pojo.PlayerState;
 import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
@@ -16,13 +15,13 @@ import java.util.*;
  */
 @Getter
 @Immutable
-public class GameArena implements ArenaService {
+public class GameArena extends Arena {
   private final List<Player> players;
   private Map<Player, Map<Integer, List<GameCard>>> arena;
-
   private final Properties arenaRuleProperties;
 
   public GameArena(List<Player> players, Properties arenaRuleProperties) {
+    super();
     this.arenaRuleProperties = arenaRuleProperties;
     this.players = players;
     initArena();
@@ -41,8 +40,7 @@ public class GameArena implements ArenaService {
   }
 
   @Override
-  public GameCard addCard(Player player, Integer row, GameCard card) {
-    // TODO: 1/8/2023 add filter rules
+  protected GameCard addCard(Player player, Integer row, GameCard card) {
     if (invalidRow(row)) return null;
     Map<Integer, List<GameCard>> playerArena = arena.get(player);
     playerArena.computeIfAbsent(row, k -> new LinkedList<>());
@@ -51,8 +49,7 @@ public class GameArena implements ArenaService {
   }
 
   @Override
-  public boolean removeCard(Player player, Integer row, GameCard card) {
-    // TODO: 1/8/2023 add filter rules
+  protected boolean removeCard(Player player, Integer row, GameCard card) {
     if (invalidRow(row)) return false;
     Map<Integer, List<GameCard>> playerArena = arena.get(player);
     return playerArena.get(row).remove(card);
@@ -76,19 +73,16 @@ public class GameArena implements ArenaService {
       playerStatistics.put("Max Value", Integer.toString(maxPower));
       statistics.put(player, playerStatistics);
     });
-
     return statistics;
   }
 
   @Override
   public Map<Integer, List<GameCard>> getArena(Player player) {
-    if (notExist(player)) return null;
     return arena.get(player);
   }
 
   @Override
   public List<GameCard> getArena(Player player, int row) {
-    if (notExist(player)) return null;
     if (row >=0 && row < Integer.parseInt(arenaRuleProperties.getProperty("session.arena.rows"))) {
       Map<Integer, List<GameCard>> playerArena = arena.get(player);
       return playerArena.get(row);
@@ -96,11 +90,7 @@ public class GameArena implements ArenaService {
     return null;
   }
 
-  private boolean notExist(Player player) {
-    return !players.contains(player)
-            || !arena.containsKey(player)
-            || player.getState() != PlayerState.IN_GAME;
-  }
+
 
   private boolean invalidRow(Integer row) {
     return row < 0 || row >= Integer.parseInt(
