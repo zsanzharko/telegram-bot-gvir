@@ -2,6 +2,7 @@ package kz.service.game.session;
 
 import kz.pojo.GameCard;
 import kz.pojo.Player;
+import kz.service.game.statistic.GameStatisticsState;
 import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
@@ -56,10 +57,10 @@ public class GameArena extends Arena {
   }
 
   @Override
-  public Map<Player, Map<String, String>> getStatistics() {
-    Map<Player, Map<String, String>> statistics = new HashMap<>(players.size());
+  public Map<Player, Map<GameStatisticsState, String>> getStatistics() {
+    Map<Player, Map<GameStatisticsState, String>> statistics = new HashMap<>(players.size());
     players.forEach(player -> {
-      Map<String, String> playerStatistics = new HashMap<>();
+      Map<GameStatisticsState, String> playerStatistics = new HashMap<>();
       Map<Integer, List<GameCard>> playerArena = arena.get(player);
       int maxPower = 0;
       for (List<GameCard> cards : playerArena.values()) {
@@ -70,7 +71,7 @@ public class GameArena extends Arena {
           maxPower += cardPowerSum.get();
         }
       }
-      playerStatistics.put("Max Value", Integer.toString(maxPower));
+      playerStatistics.put(GameStatisticsState.PLAYER_POWER, Integer.toString(maxPower));
       statistics.put(player, playerStatistics);
     });
     return statistics;

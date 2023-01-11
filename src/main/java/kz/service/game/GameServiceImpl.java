@@ -4,11 +4,9 @@ import kz.exception.game.GameException;
 import kz.exception.game.GameStartException;
 import kz.pojo.Player;
 import kz.pojo.PlayerState;
-import kz.service.game.gamecard.GameCardService;
 import kz.service.game.session.GameSession;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.SQLException;
 import java.util.*;
 
 import static kz.service.game.rule.RuleManager.prepareToGameSession;
@@ -16,12 +14,10 @@ import static kz.service.game.rule.RuleManager.prepareToGameSession;
 @Slf4j
 public class GameServiceImpl implements GameService {
   private static GameServiceImpl service;
-  private final GameCardService cardService;
   private final Map<UUID, GameSession> gameSessions;
   private final Properties gameProperties;
 
-  private GameServiceImpl(Properties gameProperties) throws SQLException {
-    this.cardService = GameCardService.getInstance();
+  private GameServiceImpl(Properties gameProperties) {
     this.gameSessions = new HashMap<>();
     this.gameProperties = gameProperties;
   }
@@ -51,7 +47,14 @@ public class GameServiceImpl implements GameService {
     // set players on state in game
     players.forEach(player -> player.setState(PlayerState.IN_GAME));
     log.debug("Adding players to game session");
-    gameSessions.put(session, new GameSession(players, gameProperties));
+    GameSession gameSession;
+    try {
+      gameSession = new GameSession(players, gameProperties);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+    gameSessions.put(session, gameSession);
     return session;
   }
 
@@ -62,11 +65,10 @@ public class GameServiceImpl implements GameService {
   }
 
   public GameSession getGameBySession(UUID session) {
-    // TODO: 1/7/2023 If session is null throw game exception
     return gameSessions.get(session);
   }
 
-  public static GameServiceImpl getInstance(Properties gameProperties) throws SQLException {
+  public static GameServiceImpl getInstance(Properties gameProperties) {
     if (service == null) {
       service = new GameServiceImpl(gameProperties);
     }

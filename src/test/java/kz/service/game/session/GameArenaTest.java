@@ -41,6 +41,7 @@ class GameArenaTest {
       players.add(new Player(String.format("Player %s", i + 1), cards));
     }
     UUID sessionGame = gameService.startSession(players);
+    assertNotNull(sessionGame);
     GameSession gameSession = gameService.getGameBySession(sessionGame);
 
     assertNotNull(gameSession.getGameArena());
@@ -62,6 +63,7 @@ class GameArenaTest {
       players.add(new Player(String.format("Player %s", i + 1), cards));
     }
     UUID sessionGame = gameService.startSession(players);
+    assertNotNull(sessionGame);
     GameSession gameSession = gameService.getGameBySession(sessionGame);
 
     Optional<GameCard> card = cards.stream().findFirst();
@@ -93,6 +95,7 @@ class GameArenaTest {
       players.add(new Player(String.format("Player %s", i + 1), cards));
     }
     UUID sessionGame = gameService.startSession(players);
+    assertNotNull(sessionGame);
     GameSession gameSession = gameService.getGameBySession(sessionGame);
 
     Optional<GameCard> card = cards.stream().findFirst();

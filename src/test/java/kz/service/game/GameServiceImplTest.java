@@ -23,11 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GameServiceImplTest {
   private static GameServiceImpl gameService;
+  private static Properties properties;
 
   @BeforeAll
   public static void initDatasource() throws IOException, SQLException, ClassNotFoundException {
     DatabaseConnector.getInstance(new DataSourceConfiguration().getDatasourceConfig());
-    Properties properties = FileUtils.getPropertiesFromFile("game-rule.properties");
+    properties = FileUtils.getPropertiesFromFile("game-rule.properties");
     gameService = GameServiceImpl.getInstance(properties);
   }
 
@@ -68,11 +69,14 @@ class GameServiceImplTest {
   void start() {
     List<Player> players = new ArrayList<>();
     List<GameCard> cards = new ArrayList<>();
-    // add cards
-    cards.add(new GameCard("Card", "Desc", 10));
-    // add two players
-    players.add(new Player("Player1", cards));
-    players.add(new Player("Player2", cards));
+    int cardSize = Integer.parseInt(properties.getProperty("game.cards.init.size"));
+    int playerSize = Integer.parseInt(properties.getProperty("session.players"));
+    for (int i = 0; i < cardSize; i++) {
+      cards.add(new GameCard("Card", "Desc", 10));
+    }
+    for (int i = 0; i < playerSize; i++) {
+      players.add(new Player(String.format("Player %d", i), cards));
+    }
     // get game session if session will start
     UUID session = gameService.startSession(players);
     assertNotNull(session);
@@ -86,11 +90,14 @@ class GameServiceImplTest {
   void startGameAndGetGameSessionObjectBySession() {
     List<Player> players = new ArrayList<>();
     List<GameCard> cards = new ArrayList<>();
-    // add cards
-    cards.add(new GameCard("Card", "Desc", 10));
-    // add two players
-    players.add(new Player("Player1", cards));
-    players.add(new Player("Player2", cards));
+    int cardSize = Integer.parseInt(properties.getProperty("game.cards.init.size"));
+    int playerSize = Integer.parseInt(properties.getProperty("session.players"));
+    for (int i = 0; i < cardSize; i++) {
+      cards.add(new GameCard("Card", "Desc", 10));
+    }
+    for (int i = 0; i < playerSize; i++) {
+      players.add(new Player(String.format("Player %d", i), cards));
+    }
     // get game session if session will start
     UUID session = gameService.startSession(players);
     assertNotNull(session);
@@ -102,9 +109,14 @@ class GameServiceImplTest {
   void stop() {
     List<Player> players = new ArrayList<>();
     List<GameCard> cards = new ArrayList<>();
-    cards.add(new GameCard("Card", "Desc", 10));
-    players.add(new Player("Player1", cards));
-    players.add(new Player("Player2", cards));
+    int cardSize = Integer.parseInt(properties.getProperty("game.cards.init.size"));
+    int playerSize = Integer.parseInt(properties.getProperty("session.players"));
+    for (int i = 0; i < cardSize; i++) {
+      cards.add(new GameCard(String.format("Card %d", i), "Desc", 11));
+    }
+    for (int i = 0; i < playerSize; i++) {
+      players.add(new Player(String.format("Player %d", i), cards));
+    }
     UUID session = gameService.startSession(players);
     assertNotNull(session);
     gameService.stopSession(session);

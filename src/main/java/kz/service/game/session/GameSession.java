@@ -3,6 +3,8 @@ package kz.service.game.session;
 import kz.pojo.GameCard;
 import kz.pojo.Player;
 import kz.pojo.PlayerState;
+import kz.service.game.statistic.GameStatisticsState;
+import kz.service.game.statistic.SendGameStatistics;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,14 @@ public class GameSession implements GameSessionService, ArenaService {
   private GameRoundState roundState;
   private Map<Player, List<GameCard>> playersWithCard;
   private GameArena gameArena;
+  private final Properties gameRuleProperties;
 
-  public GameSession(List<Player> players, Properties gameRuleProperties) {
-    this.playersWithCard = setCardFromCardDeckPlayers(players);
+  public GameSession(List<Player> players, Properties gameRuleProperties) throws Exception {
+    this.gameRuleProperties = gameRuleProperties;
+    this.playersWithCard = initCardFromCardDeckPlayers(players);
+    if (this.playersWithCard == null) {
+      throw new Exception("Can init cards on players");
+    }
     this.gameArena = new GameArena(players, gameRuleProperties);
     this.roundState = GameRoundState.NONE;
   }
@@ -36,13 +43,66 @@ public class GameSession implements GameSessionService, ArenaService {
    * @param players for get cards from card deck
    * @return playable cards on current session game
    */
-  private Map<Player, List<GameCard>> setCardFromCardDeckPlayers(List<Player> players) {
-    // FIXME: 1/8/2023 Add rule to get cards from card deck.
-    Map<Player, List<GameCard>> playerListMap = new HashMap<>(players.size());
-    players.forEach(player -> playerListMap.put(player, player.getCardDeck()));
-    return playerListMap;
+  private Map<Player, List<GameCard>> initCardFromCardDeckPlayers(List<Player> players) {
+    int maxCardOnSession = Integer.parseInt(gameRuleProperties
+            .getProperty("game.cards.init.size"));
+    if (!correctCardSizeForGame(maxCardOnSession, players)) return null;
+    Random random = new Random();
+    boolean cardsIsBalanced = false;
+    Map<Player, List<GameCard>> preparationCardsPlayers = new HashMap<>(players.size());
+    while (!cardsIsBalanced) {
+      preparationCardsPlayers.clear();
+      for (Player player : players) {
+        preparationCardsPlayers.put(player, new LinkedList<>());
+        for (int cardIndex = 0; cardIndex < maxCardOnSession; cardIndex++) {
+          preparationCardsPlayers.get(player).add(player
+                  .getCardDeck()
+                  .get(random.nextInt(maxCardOnSession)));
+        }
+      }
+      List<Integer> sumPowersOnPlayers = new ArrayList<>(players.size());
+      preparationCardsPlayers.forEach((player, cards) -> sumPowersOnPlayers.add(cards.stream()
+              .map(GameCard::getPower)
+              .max(Integer::sum)
+              .orElse(-1)));
+      // Example
+      // player 1     player 2
+      //  52            51 == true  3
+      //  55            52
+      //  52            55
+      //  60            50 == false
+      //  | a
+      // [52, 50, 50, 53]
+      //      | b
+      // [52, 50, 50, 53]
+      int a;
+      int b;
+      int result;
+      for (int i = 0; i < sumPowersOnPlayers.size(); i++) {
+        for (int j = 1; j < sumPowersOnPlayers.size(); j++) {
+          a = sumPowersOnPlayers.get(i);
+          b = sumPowersOnPlayers.get(j);
+          result = Math.abs(a - b);
+          if (!(result >= 0 && result <= 3)) {
+            cardsIsBalanced = false;
+            break;
+          }
+          cardsIsBalanced = true;
+        }
+        if (!cardsIsBalanced) break;
+      }
+    }
+    return preparationCardsPlayers;
   }
 
+  private boolean correctCardSizeForGame(int maxCardOnSession, List<Player> players) {
+    for (Player player : players) {
+      if (!(player.getCardDeck().size() >= maxCardOnSession)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   public Set<Player> getPlayers() {
     return new HashSet<>(playersWithCard.keySet());
@@ -55,13 +115,9 @@ public class GameSession implements GameSessionService, ArenaService {
   @Override
   public void stopSession() {
     roundState = GameRoundState.NONE;
-    Map<Player, Map<String, String>> statistics = gameArena.getStatistics();
     playersWithCard.keySet().forEach(p -> p.setState(PlayerState.NONE));
     playersWithCard = null;
     gameArena = null;
-    log.info(statistics.toString());
-    // TODO: 1/8/2023 Finish game for to players and notify
-    //  with him from take instance object
   }
 
   @Override
@@ -80,8 +136,21 @@ public class GameSession implements GameSessionService, ArenaService {
     return gameArena.removeCard(player, row, card);
   }
 
+  /**
+   * Get information about a current on game arena.
+   * This method send statistics to implemented services
+   * like server side or mobile app
+   *
+   * @param sender send statistics to implemented services
+   */
+  public void sendStatistics(SendGameStatistics sender) {
+    Map<Player, Map<GameStatisticsState, String>> playersStatistics = getStatistics();
+
+    sender.send(playersStatistics);
+  }
+
   @Override
-  public Map<Player, Map<String, String>> getStatistics() {
+  public Map<Player, Map<GameStatisticsState, String>> getStatistics() {
     return gameArena.getStatistics();
   }
 
