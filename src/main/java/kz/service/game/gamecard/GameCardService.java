@@ -1,4 +1,4 @@
-package kz.service.gamecard;
+package kz.service.game.gamecard;
 
 import kz.pojo.GameCard;
 import kz.utils.DatabaseConnector;
@@ -12,16 +12,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class GameCardManager {
+public class GameCardService {
+  private static GameCardService service;
   private List<GameCard> cards;
 
-  protected GameCardManager() throws SQLException {
-    log.info("Creating Game Card Manager....");
+  private GameCardService() throws SQLException {
     initCards();
   }
 
-  protected GameCardManager(List<GameCard> cards) {
-    log.info("Creating Game Card Manager....");
+  public GameCardService(List<GameCard> cards) {
     this.cards = cards;
   }
 
@@ -48,5 +47,21 @@ public class GameCardManager {
     return cards.stream()
             .filter(gameCard -> gameCard.getTitle().equals(title))
             .findFirst();
+  }
+
+  public static GameCardService getInstance() throws SQLException {
+    if (service == null) {
+      service = new GameCardService();
+      log.info("Created Game Card Service.");
+    }
+    return service;
+  }
+
+  public static GameCardService getInstance(List<GameCard> cards) {
+    if (service == null) {
+      service = new GameCardService(cards);
+      log.info("Created Game Card Service.");
+    }
+    return service;
   }
 }

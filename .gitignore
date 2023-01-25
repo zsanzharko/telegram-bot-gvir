@@ -1,4 +1,5 @@
 # App
+/src/main/resources/game-rule.properties
 /src/*/resources/telegram_bot_conf.properties
 
 .gradle
