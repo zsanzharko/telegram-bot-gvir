@@ -1,4 +1,4 @@
-package kz.service.game;
+package kz.service.game.session;
 
 import kz.pojo.Player;
 

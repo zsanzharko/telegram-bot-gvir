@@ -94,7 +94,6 @@ public class GameArena extends Arena {
 
 
   private boolean invalidRow(Integer row) {
-    return row < 0 || row >= Integer.parseInt(
-            arenaRuleProperties.getProperty("session.arena.rows"));
+    return row < 0 || row >= Integer.parseInt(arenaRuleProperties.getProperty("session.arena.rows"));
   }
 }

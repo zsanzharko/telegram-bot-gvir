@@ -15,11 +15,11 @@ import java.util.*;
  * Provide full game control on session with players.
  *
  * @author Sanzhar
- * @see kz.service.game.GameServiceImpl
+ * @see GameServiceImpl
  */
 @Slf4j
 @Getter
-public class GameSession implements GameSessionService, ArenaService {
+public class GameSession implements ArenaService {
   @Setter
   private GameRoundState roundState;
   private Map<Player, List<GameCard>> playersWithCard;
@@ -108,16 +108,12 @@ public class GameSession implements GameSessionService, ArenaService {
     return new HashSet<>(playersWithCard.keySet());
   }
 
-  /**
-   * Session will stop on session side. Players will get set None.
-   * And show full information about game sessions.
-   */
-  @Override
-  public void stopSession() {
-    roundState = GameRoundState.NONE;
-    playersWithCard.keySet().forEach(p -> p.setState(PlayerState.NONE));
-    playersWithCard = null;
-    gameArena = null;
+  void stopSession() {
+    if (roundState == GameRoundState.NONE) {
+      playersWithCard.keySet().forEach(p -> p.setState(PlayerState.NONE));
+      playersWithCard = null;
+      gameArena = null;
+    }
   }
 
   @Override
@@ -155,7 +151,7 @@ public class GameSession implements GameSessionService, ArenaService {
   }
 
   @Override
-  public Map<Integer, List<GameCard>> getArena(Player player) {
+  public Map<Integer, List<GameCard>> getArenaFromPlayer(Player player) {
     if (notExist(player)) {
       return null;
     }
@@ -163,7 +159,7 @@ public class GameSession implements GameSessionService, ArenaService {
   }
 
   @Override
-  public List<GameCard> getArena(Player player, int row) {
+  public List<GameCard> getArenaFromPlayer(Player player, int row) {
     if (notExist(player)) {
       return null;
     }

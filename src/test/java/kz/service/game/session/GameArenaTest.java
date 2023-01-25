@@ -2,7 +2,6 @@ package kz.service.game.session;
 
 import kz.pojo.GameCard;
 import kz.pojo.Player;
-import kz.service.game.GameServiceImpl;
 import kz.utils.DataSourceConfiguration;
 import kz.utils.DatabaseConnector;
 import kz.utils.FileUtils;

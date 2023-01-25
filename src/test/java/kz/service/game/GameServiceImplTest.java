@@ -5,6 +5,7 @@ import kz.pojo.GameCard;
 import kz.pojo.Player;
 import kz.pojo.PlayerState;
 import kz.service.game.session.GameRoundState;
+import kz.service.game.session.GameServiceImpl;
 import kz.service.game.session.GameSession;
 import kz.utils.DataSourceConfiguration;
 import kz.utils.DatabaseConnector;

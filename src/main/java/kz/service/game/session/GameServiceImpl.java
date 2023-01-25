@@ -1,12 +1,12 @@
-package kz.service.game;
+package kz.service.game.session;
 
 import kz.exception.game.GameException;
 import kz.exception.game.GameStartException;
 import kz.pojo.Player;
 import kz.pojo.PlayerState;
-import kz.service.game.session.GameSession;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 
 import static kz.service.game.rule.RuleManager.prepareToGameSession;
@@ -14,11 +14,11 @@ import static kz.service.game.rule.RuleManager.prepareToGameSession;
 @Slf4j
 public class GameServiceImpl implements GameService {
   private static GameServiceImpl service;
-  private final Map<UUID, GameSession> gameSessions;
+  private final Map<UUID, GameSession> uuidGameSessionMap;
   private final Properties gameProperties;
 
   private GameServiceImpl(Properties gameProperties) {
-    this.gameSessions = new HashMap<>();
+    this.uuidGameSessionMap = new HashMap<>();
     this.gameProperties = gameProperties;
   }
 
@@ -27,6 +27,7 @@ public class GameServiceImpl implements GameService {
     if (players == null) {
       throw new GameStartException("Players can not be null");
     } else if (!Objects.equals(gameProperties.get("session.players"), String.valueOf(players.size()))) {
+      // TODO: 1/25/2023 need to check how to except method
       throw new GameStartException("Players is not be compatibility size player on game",
               new GameException("Have problem with connect service... Check rule connect player." +
                       " Also check waiting room"));
@@ -54,21 +55,24 @@ public class GameServiceImpl implements GameService {
       e.printStackTrace();
       return null;
     }
-    gameSessions.put(session, gameSession);
+    uuidGameSessionMap.put(session, gameSession);
     return session;
   }
 
   @Override
-  public void stopSession(UUID session) {
-    gameSessions.get(session).stopSession();
-    gameSessions.remove(session);
+  public void stopSession(@NotNull UUID uuidSession) {
+    GameSession gameSession = uuidGameSessionMap.get(uuidSession);
+    if (gameSession != null) {
+      gameSession.stopSession();
+      uuidGameSessionMap.remove(uuidSession);
+    }
   }
 
-  public GameSession getGameBySession(UUID session) {
-    return gameSessions.get(session);
+  public GameSession getGameBySession(@NotNull UUID session) {
+    return uuidGameSessionMap.get(session);
   }
 
-  public static GameServiceImpl getInstance(Properties gameProperties) {
+  public static GameServiceImpl getInstance(@NotNull Properties gameProperties) {
     if (service == null) {
       service = new GameServiceImpl(gameProperties);
     }
